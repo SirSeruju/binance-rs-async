@@ -58,12 +58,12 @@ pub struct OrderRequest {
     pub order_type: OrderType,
     pub time_in_force: Option<TimeInForce>,
     #[serde(rename = "quantity")]
-    pub quantity: Option<f64>,
+    pub quantity: Option<String>,
     pub reduce_only: Option<bool>,
-    pub price: Option<f64>,
-    pub stop_price: Option<f64>,
+    pub price: Option<String>,
+    pub stop_price: Option<String>,
     pub close_position: Option<bool>,
-    pub activation_price: Option<f64>,
+    pub activation_price: Option<String>,
     pub callback_rate: Option<f64>,
     pub working_type: Option<WorkingType>,
     #[serde(serialize_with = "serialize_opt_as_uppercase")]
@@ -95,7 +95,7 @@ impl FuturesAccount {
 
     /// Get currently open orders
     pub async fn get_open_orders(&self, symbol: impl Into<String>) -> Result<Vec<Order>> {
-        let payload = build_signed_request_p(PairQuery{symbol: symbol.into()}, self.recv_window)?;
+        let payload = build_signed_request_p(PairQuery { symbol: symbol.into() }, self.recv_window)?;
         self.client.get_signed("/fapi/v1/openOrders", &payload).await
     }
 
@@ -104,114 +104,6 @@ impl FuturesAccount {
         self.client
             .post_signed_p("/fapi/v1/order/test", order, self.recv_window)
             .await
-    }
-
-    /// Place a limit buy order
-    pub async fn limit_buy(
-        &self,
-        symbol: impl Into<String>,
-        qty: impl Into<f64>,
-        price: f64,
-        time_in_force: TimeInForce,
-    ) -> Result<Transaction> {
-        let order = OrderRequest {
-            symbol: symbol.into(),
-            side: OrderSide::Buy,
-            position_side: None,
-            order_type: OrderType::Limit,
-            time_in_force: Some(time_in_force),
-            quantity: Some(qty.into()),
-            reduce_only: None,
-            price: Some(price),
-            stop_price: None,
-            close_position: None,
-            activation_price: None,
-            callback_rate: None,
-            working_type: None,
-            price_protect: None,
-            new_client_order_id: None,
-        };
-        self.place_order(order).await
-    }
-
-    /// Place a limit sell order
-    pub async fn limit_sell(
-        &self,
-        symbol: impl Into<String>,
-        qty: impl Into<f64>,
-        price: f64,
-        time_in_force: TimeInForce,
-    ) -> Result<Transaction> {
-        let order = OrderRequest {
-            symbol: symbol.into(),
-            side: OrderSide::Sell,
-            position_side: None,
-            order_type: OrderType::Limit,
-            time_in_force: Some(time_in_force),
-            quantity: Some(qty.into()),
-            reduce_only: None,
-            price: Some(price),
-            stop_price: None,
-            close_position: None,
-            activation_price: None,
-            callback_rate: None,
-            working_type: None,
-            price_protect: None,
-            new_client_order_id: None,
-        };
-        self.place_order(order).await
-    }
-
-    /// Place a Market buy order
-    pub async fn market_buy<S, F>(&self, symbol: S, qty: F) -> Result<Transaction>
-    where
-        S: Into<String>,
-        F: Into<f64>,
-    {
-        let order = OrderRequest {
-            symbol: symbol.into(),
-            side: OrderSide::Buy,
-            position_side: None,
-            order_type: OrderType::Market,
-            time_in_force: None,
-            quantity: Some(qty.into()),
-            reduce_only: None,
-            price: None,
-            stop_price: None,
-            close_position: None,
-            activation_price: None,
-            callback_rate: None,
-            working_type: None,
-            price_protect: None,
-            new_client_order_id: None,
-        };
-        self.place_order(order).await
-    }
-
-    /// Place a Market sell order
-    pub async fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction>
-    where
-        S: Into<String>,
-        F: Into<f64>,
-    {
-        let order: OrderRequest = OrderRequest {
-            symbol: symbol.into(),
-            side: OrderSide::Sell,
-            position_side: None,
-            order_type: OrderType::Market,
-            time_in_force: None,
-            quantity: Some(qty.into()),
-            reduce_only: None,
-            price: None,
-            stop_price: None,
-            close_position: None,
-            activation_price: None,
-            callback_rate: None,
-            working_type: None,
-            price_protect: None,
-            new_client_order_id: None,
-        };
-        self.place_order(order).await
     }
 
     /// Place a cancellation order
