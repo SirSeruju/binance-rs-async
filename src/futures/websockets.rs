@@ -1,5 +1,3 @@
-use std::sync::atomic::{AtomicBool, Ordering};
-
 use futures::StreamExt;
 use serde_json::from_str;
 use tokio::net::TcpStream;
@@ -131,12 +129,10 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
 
     pub fn socket(&self) -> &Option<(WebSocketStream<MaybeTlsStream<TcpStream>>, Response)> { &self.socket }
 
-    pub async fn event_loop(&mut self, running: &AtomicBool) -> Result<()> {
-        while running.load(Ordering::Relaxed) {
-            if let Some((ref mut socket, _)) = self.socket {
-                // TODO: return error instead of panic?
-                let message = socket.next().await.unwrap()?;
-
+    pub async fn event_loop(&mut self) -> Result<()> {
+        if let Some((ref mut socket, _)) = self.socket {
+            while let Some(message) = socket.next().await {
+                let message = message?;
                 match message {
                     Message::Text(msg) => {
                         if msg.is_empty() {
