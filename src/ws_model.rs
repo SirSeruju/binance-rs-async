@@ -303,9 +303,9 @@ pub struct CombinedStreamEvent<T> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum WebsocketEventUntag {
-    WebsocketEvent(WebsocketEvent),
-    Orderbook(Box<OrderBook>),
-    BookTicker(Box<BookTickerEvent>),
+    WebsocketEvent { data: WebsocketEvent },
+    Orderbook { data: Box<OrderBook> },
+    BookTicker { data: Box<BookTickerEvent> },
 }
 
 impl<T> CombinedStreamEvent<T> {
